@@ -1,2 +1,3 @@
-# yononaka
-世の中 : Yononaka
+# 世の中 : Yononaka
+
+An agent-based model engine written in Raku
