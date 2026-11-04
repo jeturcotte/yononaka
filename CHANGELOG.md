@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 ### Added
 
 - Distribution skeleton
+- Basic README
+- A few basic tests
 
 ### Changed
 
