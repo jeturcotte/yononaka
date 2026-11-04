@@ -1,0 +1,12 @@
+use Test;
+
+plan 3;
+
+use-ok 'Yononaka';
+
+use Yononaka;
+
+ok ::( 'Yononaka' ) !~~ Failure, 'Yononaka namespace is declared';
+
+ok Yononaka.WHY.defined, 'Yononaka has a docstring!';
+
