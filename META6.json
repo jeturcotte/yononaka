@@ -1,0 +1,12 @@
+{
+  "name": "Yononaka",
+  "description": "Agent-Based Modelling with and expanding upon NetLogo-inspired patches, agents and wrapping worlds",
+  "raku": "6.d",
+  "provides": {},
+  "version": "0.1.0",
+  "auth": "zef:jeturcotte",
+  "license": "MIT",
+  "authors": [ "J.E. Turcotte" ],
+  "source-url": "https://github.com/jeturcotte/yononaka",
+  "tags": [ "ABM", "simulation", "experiment", "agent-based-model" ]
+}
