@@ -2,7 +2,10 @@
   "name": "Yononaka",
   "description": "Agent-Based Modelling with and expanding upon NetLogo-inspired patches, agents and wrapping worlds",
   "raku": "6.d",
-  "provides": { "Yononaka": "lib/Yononaka.rakumod" },
+  "provides": { 
+    "Yononaka": "lib/Yononaka.rakumod",
+    "Yononaka::World": "lib/Yononaka/World.rakumod"
+  },
   "version": "0.1.0",
   "auth": "zef:jeturcotte",
   "license": "Artistic-2.0",

@@ -9,12 +9,12 @@ my $world = Yononaka::World.new(
   min-y => -5, 
   max-x => 5, 
   max-y => 5,
-  :wraps-horizontally,
-  :!wraps-vertically
+  :wraps-x,
+  :!wraps-y
 );
 
-is $world.width, 11, 'World is 11 patches across';
-is $world.height, 11, 'World is 11 patches tall';
+is $world.span-x, 11, 'World is 11 plots across';
+is $world.span-y, 11, 'World is 11 plots tall';
 
 is-deeply $world.normalize( 3, 3 ), ( 3, 3 ), 'a point in the world remains unchanged';
 is-deeply $world.normalize( 5, -5 ), ( 5, -5 ), 'an edge point comes back correctly';
@@ -29,12 +29,12 @@ $world = Yononaka::World.new(
   min-y => 0,
   max-x => 5,
   max-y => 5,
-  :!wraps-horizontally,
-  :wraps-vertically
+  :!wraps-x,
+  :wraps-y
 );
 
-is $world.width, 6, 'Corner world is 6 patches across';
-is $world.height, 6, 'Corner world is 6 patches tall';
+is $world.span-x, 6, 'Corner world is 6 plots across';
+is $world.span-y, 6, 'Corner world is 6 plots tall';
 
 is-deeply $world.normalize( 1, -1 ), ( 1, 5 ), 'stepping off bottom edge wraps to top in corner world';
 is-deeply $world.normalize( 1, 6 ), ( 1, 0 ), 'stepping off top edge wraps to bottom in corner world';
@@ -44,8 +44,8 @@ dies-ok { Yononaka::World.new(
   min-y => -5,
   max-x => -5,
   max-y => 5,
-  :wraps-horizontally,
-  :wraps-vertically
+  :wraps-x,
+  :wraps-y
 ) }, 'world with min-x greater than max-x refuses to instantiate';
 
 dies-ok { Yononaka::World.new(
@@ -53,7 +53,7 @@ dies-ok { Yononaka::World.new(
   min-y => 5,
   max-x => 5,
   max-y => -5,
-  :wraps-horizontally,
-  :wraps-vertically
+  :wraps-x,
+  :wraps-y
 ) }, 'world with min-y greater than max-y refuses to instantiate'; 
 
