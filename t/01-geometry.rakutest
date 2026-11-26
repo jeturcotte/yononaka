@@ -1,0 +1,58 @@
+use Test;
+
+plan 15;
+
+use Yononaka::Geometry;
+
+my $geo = Yononaka::Geometry.new(
+  min-x => -5, 
+  min-y => -5, 
+  max-x => 5, 
+  max-y => 5,
+  :wraps-x,
+  :!wraps-y
+);
+
+is $geo.span-x, 11, 'Geometry is 11 plots across';
+is $geo.span-y, 11, 'Geometry is 11 plots tall';
+
+is-deeply $geo.normalize( 3, 3 ), ( 3, 3 ), 'a point in the geometry remains unchanged';
+is-deeply $geo.normalize( 5, -5 ), ( 5, -5 ), 'an edge point comes back correctly';
+is-deeply $geo.normalize( 6, 1 ), ( -5, 1 ), 'stepping off east edge wraps to west edge';
+is-deeply $geo.normalize( -6, 1 ), ( 5, 1 ), 'stepping off west edge wraps to east edge';
+is-deeply $geo.normalize( 17, 1 ), ( -5, 1 ), 'leaping a whole positive grid width wraps correctly';
+is-deeply $geo.normalize( -17, 1 ), ( 5, 1 ), 'leaping a whole negative grid width wraps correctly';
+nok $geo.normalize( 1, 6 ).defined, 'cannot step off unwrapped edge of the geometry';
+
+$geo = Yononaka::Geometry.new(
+  min-x => 0,
+  min-y => 0,
+  max-x => 5,
+  max-y => 5,
+  :!wraps-x,
+  :wraps-y
+);
+
+is $geo.span-x, 6, 'Corner geometry is 6 plots across';
+is $geo.span-y, 6, 'Corner geometry is 6 plots tall';
+
+is-deeply $geo.normalize( 1, -1 ), ( 1, 5 ), 'Stepping off bottom edge wraps to top in corner geometry';
+is-deeply $geo.normalize( 1, 6 ), ( 1, 0 ), 'Stepping off top edge wraps to bottom in corner geometry';
+
+dies-ok { Yononaka::Geometry.new(
+  min-x => 5,
+  min-y => -5,
+  max-x => -5,
+  max-y => 5,
+  :wraps-x,
+  :wraps-y
+) }, 'Geometry with min-x greater than max-x refuses to instantiate';
+
+dies-ok { Yononaka::Geometry.new(
+  min-x => -5,
+  min-y => 5,
+  max-x => 5,
+  max-y => -5,
+  :wraps-x,
+  :wraps-y
+) }, 'Geometry with min-y greater than max-y refuses to instantiate'; 

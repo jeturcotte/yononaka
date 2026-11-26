@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 - Distribution skeleton
 - Basic README
 - A few basic tests
-- A world is now defined, has optional wraps in two dimensions, can normalize coordinates, and won't instantiate if defined poorly.  It does, however, allow a 1x1 world.
+- A geometry is now defined, has optional wraps in two dimensions, can normalize coordinates, and won't instantiate if defined poorly.  It does, however, allow a 1x1 world, and there should be no means of a 0x0 world even being created.
 
 ### Changed
 

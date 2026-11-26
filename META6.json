@@ -4,7 +4,7 @@
   "raku": "6.d",
   "provides": { 
     "Yononaka": "lib/Yononaka.rakumod",
-    "Yononaka::World": "lib/Yononaka/World.rakumod"
+    "Yononaka::Geometry": "lib/Yononaka/Geometry.rakumod"
   },
   "version": "0.1.0",
   "auth": "zef:jeturcotte",

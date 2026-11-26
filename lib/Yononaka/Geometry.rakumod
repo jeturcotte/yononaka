@@ -1,5 +1,5 @@
 #| This class represents a world in which simulations might be run.  
-unit class Yononaka::World;
+unit class Yononaka::Geometry;
 
 #| The westernmost plot in the world.
 has Int $.min-x is required;
