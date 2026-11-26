@@ -60,8 +60,47 @@ method normalize( $x, $y ) {
 
 }
 
+#| Each cell in this geometry can call .neighbors to retrieve up to eight neighboring cells.
+method neighbors( $x, $y ) {
+
+  my @neighbors;
+
+  for -1..1 -> $dx {
+    for -1..1 -> $dy {
+      next if $dx == 0 && $dy == 0; # skip the center cell itself
+      my $nx = $x + $dx;
+      my $ny = $y + $dy;
+      my ( $nnx, $nny ) = $.normalize( $nx, $ny );
+      push @neighbors, [ $nnx, $nny ] if $nnx.defined && $nny.defined;
+    }
+  }
+
+  # Remove duplicate neighbors that may have resulted from wrapping
+  @neighbors.unique( :with( &[eqv] ) )
+
+}
+
+#| Each cell in this geometry can call .orthogonal-neighbors to retrieve up to four neighboring cells in the cardinal directions.
+method orthogonal-neighbors( $x, $y ) {
+
+  my @neighbors;
+
+  for [ [ -1, 0 ], [ 1, 0 ], [ 0, -1 ], [ 0, 1 ] ] -> $offset {
+    my ( $dx, $dy ) = @$offset;
+    my $nx = $x + $dx;
+    my $ny = $y + $dy;
+    my ( $nnx, $nny ) = $.normalize( $nx, $ny );
+    push @neighbors, [ $nnx, $nny ] if $nnx.defined && $nny.defined;
+  }
+
+  # Remove duplicate neighbors that may have resulted from wrapping
+  @neighbors.unique( :with( &[eqv] ) )
+
+}
+
 #| Don't return a partially valid world
 submethod TWEAK {
   die "Maximum X must not be less than Minimum X" unless $!min-x <= $!max-x;
   die "Maximum Y must not be less than Minimum Y" unless $!min-y <= $!max-y;
 }
+

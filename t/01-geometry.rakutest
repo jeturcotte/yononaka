@@ -1,58 +1,156 @@
 use Test;
 
-plan 15;
+plan 4;
 
 use Yononaka::Geometry;
 
-my $geo = Yononaka::Geometry.new(
-  min-x => -5, 
-  min-y => -5, 
-  max-x => 5, 
-  max-y => 5,
-  :wraps-x,
-  :!wraps-y
-);
 
-is $geo.span-x, 11, 'Geometry is 11 plots across';
-is $geo.span-y, 11, 'Geometry is 11 plots tall';
+subtest 'Geometry Setup Integrity Tests' => {
 
-is-deeply $geo.normalize( 3, 3 ), ( 3, 3 ), 'a point in the geometry remains unchanged';
-is-deeply $geo.normalize( 5, -5 ), ( 5, -5 ), 'an edge point comes back correctly';
-is-deeply $geo.normalize( 6, 1 ), ( -5, 1 ), 'stepping off east edge wraps to west edge';
-is-deeply $geo.normalize( -6, 1 ), ( 5, 1 ), 'stepping off west edge wraps to east edge';
-is-deeply $geo.normalize( 17, 1 ), ( -5, 1 ), 'leaping a whole positive grid width wraps correctly';
-is-deeply $geo.normalize( -17, 1 ), ( 5, 1 ), 'leaping a whole negative grid width wraps correctly';
-nok $geo.normalize( 1, 6 ).defined, 'cannot step off unwrapped edge of the geometry';
+  plan 2;
 
-$geo = Yononaka::Geometry.new(
-  min-x => 0,
-  min-y => 0,
-  max-x => 5,
-  max-y => 5,
-  :!wraps-x,
-  :wraps-y
-);
+  dies-ok { Yononaka::Geometry.new(
+    min-x => 5,
+    min-y => -5,
+    max-x => -5,
+    max-y => 5,
+    :wraps-x,
+    :wraps-y
+  ) }, 'Geometry with min-x greater than max-x refuses to instantiate';
 
-is $geo.span-x, 6, 'Corner geometry is 6 plots across';
-is $geo.span-y, 6, 'Corner geometry is 6 plots tall';
+  dies-ok { Yononaka::Geometry.new(
+    min-x => -5,
+    min-y => 5,
+    max-x => 5,
+    max-y => -5,
+    :wraps-x,
+    :wraps-y
+  ) }, 'Geometry with min-y greater than max-y refuses to instantiate'; 
 
-is-deeply $geo.normalize( 1, -1 ), ( 1, 5 ), 'Stepping off bottom edge wraps to top in corner geometry';
-is-deeply $geo.normalize( 1, 6 ), ( 1, 0 ), 'Stepping off top edge wraps to bottom in corner geometry';
+}
 
-dies-ok { Yononaka::Geometry.new(
-  min-x => 5,
-  min-y => -5,
-  max-x => -5,
-  max-y => 5,
-  :wraps-x,
-  :wraps-y
-) }, 'Geometry with min-x greater than max-x refuses to instantiate';
 
-dies-ok { Yononaka::Geometry.new(
-  min-x => -5,
-  min-y => 5,
-  max-x => 5,
-  max-y => -5,
-  :wraps-x,
-  :wraps-y
-) }, 'Geometry with min-y greater than max-y refuses to instantiate'; 
+subtest 'Geometry Normalization Tests' => {
+
+  plan 13;
+
+  my $geo = Yononaka::Geometry.new(
+    min-x => -5, 
+    min-y => -5, 
+    max-x => 5, 
+    max-y => 5,
+    :wraps-x,
+    :!wraps-y
+  );
+
+  is $geo.span-x, 11, 'Geometry is 11 plots across';
+  is $geo.span-y, 11, 'Geometry is 11 plots tall';
+
+  is-deeply $geo.normalize( 3, 3 ), ( 3, 3 ), 'A point in the geometry remains unchanged';
+  is-deeply $geo.normalize( 5, -5 ), ( 5, -5 ), 'An edge point comes back correctly';
+  is-deeply $geo.normalize( 6, 1 ), ( -5, 1 ), 'Stepping off east edge wraps to west edge';
+  is-deeply $geo.normalize( -6, 1 ), ( 5, 1 ), 'Stepping off west edge wraps to east edge';
+  is-deeply $geo.normalize( 17, 1 ), ( -5, 1 ), 'Leaping a whole positive grid width wraps correctly';
+  is-deeply $geo.normalize( -17, 1 ), ( 5, 1 ), 'Leaping a whole negative grid width wraps correctly';
+  nok $geo.normalize( 1, 6 ).defined, 'Cannot step off unwrapped edge of the geometry';
+
+  $geo = Yononaka::Geometry.new(
+    min-x => 0,
+    min-y => 0,
+    max-x => 5,
+    max-y => 5,
+    :!wraps-x,
+    :wraps-y
+  );
+
+  is $geo.span-x, 6, 'Corner geometry is 6 plots across';
+  is $geo.span-y, 6, 'Corner geometry is 6 plots tall';
+
+  is-deeply $geo.normalize( 1, -1 ), ( 1, 5 ), 'Stepping off bottom edge wraps to top in corner geometry';
+  is-deeply $geo.normalize( 1, 6 ), ( 1, 0 ), 'Stepping off top edge wraps to bottom in corner geometry';
+
+}
+
+
+subtest 'Geometry Neighborhood Tests' => {
+
+  plan 8;
+
+  my $geo = Yononaka::Geometry.new(
+    min-x => -3,
+    min-y => -3,
+    max-x => 3,
+    max-y => 3,
+    :wraps-x,
+    :wraps-y
+  );
+
+  is-deeply $geo.neighbors( 0, 0 ).sort, [ 
+    [-1, -1], [0, -1], [1, -1], [-1, 0], 
+    [1, 0], [-1, 1], [0, 1], [1, 1] 
+  ].sort, 'Neighbors of the center point are correct';
+
+  is-deeply $geo.orthogonal-neighbors( 0, -0 ).sort, [
+    [0, -1], [-1, 0], [1, 0], [0, 1]
+  ].sort, 'Orthogonal neighbors of the center point are correct';
+
+  is-deeply $geo.neighbors( 3, 3 ).sort, [
+    [2, 2], [3, 2], [-3, 2], [2, 3], 
+    [-3, 3], [2, -3], [3, -3], [-3, -3]
+  ].sort, 'Neighbors of the top-right corner are correct';
+
+  is-deeply $geo.orthogonal-neighbors( 3, 3 ).sort, [
+    [2, 3], [3, 2], [-3, 3], [3, -3]
+  ].sort, 'Orthogonal neighbors of the top-right corner are correct';
+
+  is-deeply $geo.neighbors( -3, -3 ).sort, [
+    [-2, -2], [-3, -2], [3, -2], [-2, -3], 
+    [3, -3], [-2, 3], [-3, 3], [3, 3]
+  ].sort, 'Neighbors of the bottom-left corner are correct';
+
+  is-deeply $geo.orthogonal-neighbors( -3, -3 ).sort, [
+    [-2, -3], [-3, -2], [3, -3], [-3, 3]
+  ].sort, 'Orthogonal neighbors of the bottom-left corner are correct';
+
+  $geo = Yononaka::Geometry.new(
+    min-x => -3,
+    min-y => -3,
+    max-x => 3,
+    max-y => 3,
+    :!wraps-x,
+    :!wraps-y
+  );
+
+  is-deeply $geo.neighbors( 3, 3 ).sort, [
+    [2, 2], [3, 2], [2, 3]
+  ].sort, 'Neighbors of the top-right corner without wrapping are correct';
+
+  is-deeply $geo.orthogonal-neighbors( 3, 3 ).sort, [
+    [2, 3], [3, 2]
+  ].sort, 'Orthogonal neighbors of the top-right corner without wrapping are correct';
+
+}
+
+
+subtest 'Geometry Neighborhood Wrap Dupe Tests' => {
+
+  plan 2;
+
+  my $geo = Yononaka::Geometry.new(
+    min-x => 0,
+    min-y => 0,
+    max-x => 1,
+    max-y => 1,
+    :wraps-x,
+    :wraps-y
+  );
+
+  is-deeply $geo.neighbors( 0, 0 ).sort, [
+    [1, 1], [0, 1], [1, 0]
+  ].sort, 'Neighbors of the bottom-left corner with wrapping are correct';
+
+  is-deeply $geo.orthogonal-neighbors( 0, 0 ).sort, [
+    [0, 1], [1, 0]
+  ].sort, 'Orthogonal neighbors of the bottom-left corner with wrapping are correct';
+
+}
