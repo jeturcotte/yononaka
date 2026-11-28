@@ -134,7 +134,7 @@ subtest 'Geometry Neighborhood Tests' => {
 
 subtest 'Geometry Neighborhood Wrap Dupe Tests' => {
 
-  plan 2;
+  plan 4;
 
   my $geo = Yononaka::Geometry.new(
     min-x => 0,
@@ -152,5 +152,18 @@ subtest 'Geometry Neighborhood Wrap Dupe Tests' => {
   is-deeply $geo.orthogonal-neighbors( 0, 0 ).sort, [
     [0, 1], [1, 0]
   ].sort, 'Orthogonal neighbors of the bottom-left corner with wrapping are correct';
+
+  $geo = Yononaka::Geometry.new(
+    min-x => 0,
+    min-y => 0,
+    max-x => 0,
+    max-y => 0,
+    :wraps-x,
+    :wraps-y
+  );
+
+  is-deeply $geo.neighbors( 0, 0 ).sort, (), 'Neighbors of the only cell with wrapping are correct';
+
+  is-deeply $geo.orthogonal-neighbors( 0, 0 ).sort, (), 'Orthogonal neighbors of the only cell with wrapping are correct';
 
 }

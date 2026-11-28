@@ -36,7 +36,8 @@ method span-y {
 #| Check on whether a value is out of bounds while wrapping is or is not enabled
 method !out-of-bounds( Int $value, Int $min, Int $max, Bool $wraps ){
 
-  return True if not $wraps and not $min <= $value <= $max
+  return True if not $wraps 
+    and not $min <= $value <= $max
 
 }
 
@@ -48,11 +49,11 @@ method !wrap( Int $value, Int $min, Int $extent ) {
 }
 
 #| For a pair of coordinations, normalize their coordinatess if wrapping is allowed
-method normalize( $x, $y ) {
+method normalize( Int $x, Int $y ) {
 
   return 
     if self!out-of-bounds( $x, $.min-x, $.max-x, $.wraps-x )
-    or self!out-of-bounds( $y, $.min-y, $.max-y, $.wraps-y );
+      or self!out-of-bounds( $y, $.min-y, $.max-y, $.wraps-y );
 
   return
     self!wrap( $x, $.min-x, $.span-x ),
@@ -60,43 +61,63 @@ method normalize( $x, $y ) {
 
 }
 
-#| Each cell in this geometry can call .neighbors to retrieve up to eight neighboring cells.
-method neighbors( $x, $y ) {
 
-  my @neighbors;
+#| Compute the neighbor of a cell given an offset, taking wrapping into account. Returns undef if the neighbor is out of bounds or if the neighbor is itself.
+method !neighbor( Int $x, Int $y, Int $dx, Int $dy ) {
 
-  for -1..1 -> $dx {
-    for -1..1 -> $dy {
-      next if $dx == 0 && $dy == 0; # skip the center cell itself
-      my $nx = $x + $dx;
-      my $ny = $y + $dy;
-      my ( $nnx, $nny ) = $.normalize( $nx, $ny );
-      push @neighbors, [ $nnx, $nny ] if $nnx.defined && $nny.defined;
-    }
-  }
-
-  # Remove duplicate neighbors that may have resulted from wrapping
-  @neighbors.unique( :with( &[eqv] ) )
+  my ( $nx, $ny ) = $.normalize( $x, $y );
+  my ( $nnx, $nny ) = $.normalize( $nx + $dx, $ny + $dy );
+  return ( $nnx, $nny ) 
+    if $nnx.defined 
+      and $nny.defined
+      and not ( $nnx == $nx and $nny == $ny );
+  return;
 
 }
 
+
 #| Each cell in this geometry can call .orthogonal-neighbors to retrieve up to four neighboring cells in the cardinal directions.
-method orthogonal-neighbors( $x, $y ) {
+method orthogonal-neighbors( Int $x, Int $y ) {
 
   my @neighbors;
 
   for [ [ -1, 0 ], [ 1, 0 ], [ 0, -1 ], [ 0, 1 ] ] -> $offset {
-    my ( $dx, $dy ) = @$offset;
-    my $nx = $x + $dx;
-    my $ny = $y + $dy;
-    my ( $nnx, $nny ) = $.normalize( $nx, $ny );
+    my ( $nnx, $nny ) = self!neighbor( $x, $y, $offset[0], $offset[1] );
     push @neighbors, [ $nnx, $nny ] if $nnx.defined && $nny.defined;
   }
+  # Remove duplicate neighbors that may have resulted from wrapping
+  @neighbors.unique( :with( &[eqv] ) )
+
+}
+
+
+#! Each cell in this geometry can call .diagonal-neighbors to retrieve up to four neighboring cells in the diagonal directions.
+method diagonal-neighbors( Int $x, Int $y ) {
+
+  my @neighbors;
+
+  for [ [ -1, -1 ], [ -1, 1 ], [ 1, -1 ], [ 1, 1 ] ] -> $offset {
+    my ( $nnx, $nny ) = self!neighbor( $x, $y, $offset[0], $offset[1] );
+    push @neighbors, [ $nnx, $nny ] if $nnx.defined && $nny.defined;
+  }
+  # Remove duplicate neighbors that may have resulted from wrapping
+  @neighbors.unique( :with( &[eqv] ) )
+}
+
+
+#| Each cell in this geometry can call .neighbors to retrieve up to eight neighboring cells.
+method neighbors( Int $x, Int $y ) {
+
+  my @neighbors;
+
+  @neighbors.push: $_ for self.orthogonal-neighbors( $x, $y );
+  @neighbors.push: $_ for self.diagonal-neighbors( $x, $y );
 
   # Remove duplicate neighbors that may have resulted from wrapping
   @neighbors.unique( :with( &[eqv] ) )
 
 }
+
 
 #| Don't return a partially valid world
 submethod TWEAK {
